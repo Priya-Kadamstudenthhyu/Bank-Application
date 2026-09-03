@@ -19,11 +19,12 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'fallback-jwt-secret')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 3600))
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 
     # Extensions
     db.init_app(app)
     jwt.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3000"]}},
+    CORS(app, resources={r"/api/*": {"origins": [frontend_url]}},
          supports_credentials=True)
 
     # Register blueprints

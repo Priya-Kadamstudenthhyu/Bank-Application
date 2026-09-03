@@ -4,6 +4,7 @@ from app import db
 from app.models import User
 from app.utils.decorators import validate_password
 from datetime import timedelta
+import bcrypt
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -19,6 +20,10 @@ def register():
         if not data.get(field):
             return jsonify({'error': f'{field} is required'}), 400
 
+    valid_password, password_error = validate_password(data['password'])
+    if not valid_password:
+        return jsonify({'error': password_error}), 400
+
     if User.query.filter_by(email=data['email'].lower()).first():
         return jsonify({'error': 'Email already registered'}), 409
 
@@ -29,8 +34,9 @@ def register():
         address=data.get('address', ''),
         role='user'
     )
-    # Store password as plain text for demo mode (any password will work on login)
-    user.password_hash = 'demo'
+    user.password_hash = bcrypt.hashpw(
+        data['password'].encode('utf-8'), bcrypt.gensalt()
+    ).decode('utf-8')
 
     db.session.add(user)
     db.session.commit()
@@ -53,9 +59,11 @@ def login():
     # Find user by email
     user = User.query.filter_by(email=email).first()
 
-    # DEMO MODE: any password is accepted, only email must exist
     if not user:
         return jsonify({'error': 'No account found with this email. Please register first.'}), 401
+
+    if not bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
+        return jsonify({'error': 'Invalid email or password'}), 401
 
     if not user.is_active:
         return jsonify({'error': 'Your account has been blocked. Contact support.'}), 403

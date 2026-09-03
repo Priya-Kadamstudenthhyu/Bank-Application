@@ -13,6 +13,12 @@ __pycache__/
 
 # Node.js dependencies
 node_modules/
+**/node_modules/
+**/venv/
+frontend/build/
+frontend/dist/
+**/frontend/build/
+**/frontend/dist/
 
 # IDE settings
 .vscode/
